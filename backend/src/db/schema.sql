@@ -121,3 +121,53 @@ CREATE TABLE IF NOT EXISTS matches (
   score DECIMAL(5,2),
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Form sablonlari
+CREATE TABLE IF NOT EXISTS form_templates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(200) NOT NULL,
+  description TEXT,
+  form_type VARCHAR(50) NOT NULL CHECK (form_type IN ('participant', 'company')),
+  is_active BOOLEAN DEFAULT true,
+  created_by UUID REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Form alanlari
+CREATE TABLE IF NOT EXISTS form_fields (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  template_id UUID REFERENCES form_templates(id) ON DELETE CASCADE,
+  field_name VARCHAR(100) NOT NULL,
+  field_label VARCHAR(200) NOT NULL,
+  field_type VARCHAR(50) NOT NULL,
+  options JSONB,
+  is_required BOOLEAN DEFAULT false,
+  is_matchable BOOLEAN DEFAULT false,
+  match_weight DECIMAL(3,2) DEFAULT 1.00,
+  sort_order INTEGER DEFAULT 0,
+  placeholder VARCHAR(200),
+  validation_rules JSONB,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Form yanitlari
+CREATE TABLE IF NOT EXISTS form_responses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  template_id UUID REFERENCES form_templates(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  responses JSONB NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(template_id, user_id)
+);
+
+-- Eslestirme sonuclari
+CREATE TABLE IF NOT EXISTS match_results (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  participant_user_id UUID REFERENCES users(id),
+  company_user_id UUID REFERENCES users(id),
+  total_score DECIMAL(5,2),
+  field_scores JSONB,
+  created_at TIMESTAMP DEFAULT NOW()
+);

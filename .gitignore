@@ -23,7 +23,6 @@ uploads/logos/*
 Thumbs.db
 
 # IDE
-.vscode/settings.json
 .idea/
 
 # Logs
