@@ -366,4 +366,95 @@ router.get('/match/results', authMiddleware, requireRole('admin'), async (req, r
   }
 });
 
+// ============ GENEL BAŞVURU FORMLARI (auth gerektirmez) ============
+
+// Aday başvuru formu
+router.post('/aday-basvuru', async (req, res) => {
+  const {
+    ad_soyad, email, telefon, sehir, linkedin,
+    sektor, unvan, toplam_deneyim, mola_neden, mola_sure,
+    katilim_amac, calisma_tercihi, is_sehri, nasil_duydunuz,
+  } = req.body;
+
+  if (!ad_soyad || !email || !telefon || !sehir || !sektor || !unvan ||
+      !toplam_deneyim || !mola_neden || !mola_sure || !katilim_amac ||
+      !calisma_tercihi || !is_sehri || !nasil_duydunuz) {
+    return res.status(400).json({ error: 'Lütfen tüm zorunlu alanları doldurun.' });
+  }
+
+  try {
+    await pool.query(
+      `INSERT INTO aday_basvurular
+        (ad_soyad, email, telefon, sehir, linkedin, sektor, unvan,
+         toplam_deneyim, mola_neden, mola_sure, katilim_amac,
+         calisma_tercihi, is_sehri, nasil_duydunuz)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+      [ad_soyad, email, telefon, sehir, linkedin || null,
+       sektor, unvan, toplam_deneyim, mola_neden, mola_sure,
+       katilim_amac, calisma_tercihi, is_sehri, nasil_duydunuz]
+    );
+    res.status(201).json({ message: 'Başvurunuz alındı.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Sunucu hatası, lütfen tekrar deneyin.' });
+  }
+});
+
+// Kurumsal başvuru formu
+router.post('/kurumsal-basvuru', async (req, res) => {
+  const {
+    sirket_adi, sektor, calisan_sayisi, website, sehir,
+    yetkili_adi, yetkili_unvani, email, telefon,
+    isbirligi_modeli, pozisyonlar, ne_zaman, dei_program,
+    nasil_duydunuz, notlar,
+  } = req.body;
+
+  if (!sirket_adi || !sektor || !calisan_sayisi || !website || !sehir ||
+      !yetkili_adi || !yetkili_unvani || !email || !telefon ||
+      !isbirligi_modeli || !pozisyonlar || !ne_zaman || !dei_program || !nasil_duydunuz) {
+    return res.status(400).json({ error: 'Lütfen tüm zorunlu alanları doldurun.' });
+  }
+
+  try {
+    await pool.query(
+      `INSERT INTO kurumsal_basvurular
+        (sirket_adi, sektor, calisan_sayisi, website, sehir,
+         yetkili_adi, yetkili_unvani, email, telefon,
+         isbirligi_modeli, pozisyonlar, ne_zaman, dei_program,
+         nasil_duydunuz, notlar)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+      [sirket_adi, sektor, calisan_sayisi, website, sehir,
+       yetkili_adi, yetkili_unvani, email, telefon,
+       isbirligi_modeli, pozisyonlar, ne_zaman, dei_program,
+       nasil_duydunuz, notlar || null]
+    );
+    res.status(201).json({ message: 'Başvurunuz alındı.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Sunucu hatası, lütfen tekrar deneyin.' });
+  }
+});
+
+// Admin: aday başvurularını listele
+router.get('/aday-basvurular', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM aday_basvurular ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Admin: kurumsal başvuruları listele
+router.get('/kurumsal-basvurular', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM kurumsal_basvurular ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
 module.exports = router;
